@@ -8,6 +8,7 @@ urlpatterns = [
     path("meetings/", include("apps.meetings.urls")),
     path("dues/", include("apps.dues.urls")),
     path("settings/", include("apps.settings.urls")),
+    path("gallery/", include("apps.gallery.urls")),
     # etc.
 ]
 
