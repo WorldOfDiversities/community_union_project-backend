@@ -17,9 +17,12 @@ RUN pip install --upgrade pip setuptools wheel && pip install -r requirements.tx
 # Copy project
 COPY . /app
 
-# Collect static files and run migrations at container start via entrypoint
+# Make entrypoint executable
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000
 
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+ENTRYPOINT ["/entrypoint.sh"]
