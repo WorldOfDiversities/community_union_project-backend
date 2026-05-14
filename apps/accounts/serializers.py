@@ -72,14 +72,16 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    """Serializer for user login"""
+    """Serializer for user login with role validation"""
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+    role = serializers.CharField(required=False, allow_blank=True)
     
     def validate(self, data):
-        """Authenticate user with email and password"""
+        """Authenticate user with email and password and validate role if provided"""
         email = data.get('email', '').strip().lower()
         password = data.get('password')
+        provided_role = data.get('role', '').strip().lower() if data.get('role') else ''
         
         if not email or not password:
             raise serializers.ValidationError('Email and password are required.')
@@ -93,6 +95,11 @@ class LoginSerializer(serializers.Serializer):
         
         if not user.is_active:
             raise serializers.ValidationError('User account is inactive.')
+        
+        # Validate role if provided
+        if provided_role:
+            if user.role != provided_role:
+                raise serializers.ValidationError({'role': f'Incorrect role. Your account is registered as {user.get_role_display()}.'})
         
         data['user'] = user
         return data
