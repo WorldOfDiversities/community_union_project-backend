@@ -10,7 +10,9 @@ djangorestframework-simplejwt==5.3.1
 cryptography==41.0.7
 
 # Database (PostgreSQL for production, SQLite for dev)
-psycopg2-binary==2.9.9; platform_system != "Windows"
+# Use psycopg (psycopg3) binary wheel which is more compatible on modern Python
+# environments (avoids building from source / libpq compile issues).
+psycopg[binary]==3.2.2; platform_system != "Windows"
 
 # Image handling
 Pillow>=11.0.0
