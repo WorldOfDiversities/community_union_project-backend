@@ -26,6 +26,8 @@ class User(AbstractUser):
     phone = models.CharField(max_length=20, blank=True, null=True)
     avatar_url = models.CharField(max_length=255, blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    is_approved = models.BooleanField(default=False)
+    onboarding_submitted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

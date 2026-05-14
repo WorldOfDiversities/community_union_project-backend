@@ -18,6 +18,7 @@ class DuesPaymentSerializer(serializers.ModelSerializer):
 	member_email = serializers.EmailField(write_only=True)
 	member_name = serializers.SerializerMethodField()
 	member_id = serializers.SerializerMethodField()
+	member_avatar_url = serializers.SerializerMethodField()
 	dueDate = serializers.SerializerMethodField()
 	amountDisplay = serializers.SerializerMethodField()
 
@@ -28,6 +29,7 @@ class DuesPaymentSerializer(serializers.ModelSerializer):
 			"member_email",
 			"member_name",
 			"member_id",
+			"member_avatar_url",
 			"billing_period",
 			"due_date",
 			"dueDate",
@@ -58,6 +60,9 @@ class DuesPaymentSerializer(serializers.ModelSerializer):
 
 	def get_member_id(self, obj):
 		return obj.member.id
+
+	def get_member_avatar_url(self, obj):
+		return getattr(obj.member, "avatar_url", None)
 
 	def create(self, validated_data):
 		member_email = validated_data.pop("member_email")
