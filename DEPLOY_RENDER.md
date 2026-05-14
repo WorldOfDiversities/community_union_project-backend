@@ -6,6 +6,9 @@ Backend (Django) - required env vars
 - DJANGO_SECRET_KEY: a secure random string
 - DEBUG: false
 - DATABASE_URL: PostgreSQL connection url (e.g. postgres://user:pass@host:5432/dbname)
+	- (Supabase) You can use the Supabase DB connection string as `DATABASE_URL`.
+		Example from Supabase: `postgres://postgres:<password>@db.<project>.supabase.co:5432/postgres`.
+		Ensure `sslmode=require` is included in the URL or allow the Django adapter to require SSL.
 - ALLOWED_HOSTS: comma-separated hostnames (e.g. example.onrender.com)
 - CORS_ALLOWED_ORIGINS: comma-separated frontend URL(s) (e.g. https://your-frontend.onrender.com)
 - DEFAULT_FROM_EMAIL: email used for outgoing mail (optional)
@@ -20,6 +23,9 @@ If using object storage for media/static (recommended):
 Render-specific notes
 - Use a Postgres managed service on Render and set `DATABASE_URL` from the service.
 - For static files, either use S3-compatible storage or configure a Render persistent disk and set MEDIA_ROOT accordingly.
+ - Alternatively, use Supabase as the Postgres provider: set `DATABASE_URL` to the Supabase connection string.
+ - Supabase also provides object storage; to use it for `MEDIA` you can configure `django-storages`
+	 with the S3-compatible endpoint and credentials (see Supabase Storage docs).
 - Run `python manage.py migrate` as a deploy/ start command step, and `python manage.py collectstatic --noinput` if you serve static files.
 - Set `gunicorn` or `uvicorn` as the web start command (e.g. `gunicorn config.wsgi:application --bind 0.0.0.0:$PORT`).
 
