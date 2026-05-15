@@ -12,6 +12,7 @@ WORKDIR /app
 
 # Copy dependency files first to leverage Docker cache
 COPY requirements.txt requirements.txt
+COPY requirements/ requirements/
 RUN pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
 
 # Copy project
