@@ -1,28 +1,20 @@
 #!/usr/bin/env bash
 set -e
 
-# Wait for DB to be available (simple loop)
 if [ -n "$DATABASE_URL" ]; then
-  echo "Waiting for database..."
-  retries=0
-  until python - <<PYTHON
-import sys, os
-from urllib.parse import urlparse
-try:
-    from django.db import connections
-    print('Checking DB connection requires Django; skipping until app code copied')
-except Exception:
-    pass
-sys.exit(0)
+  echo "Checking database connection..."
+  python - <<'PYTHON'
+import os
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.base")
+django.setup()
+
+from django.db import connection
+
+connection.ensure_connection()
+print("Database connection OK")
 PYTHON
-  do
-    sleep 1
-    retries=$((retries+1))
-    if [ "$retries" -gt 60 ]; then
-      echo "Timed out waiting for DB" >&2
-      exit 1
-    fi
-  done
 fi
 
 echo "Running migrations..."
