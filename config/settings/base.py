@@ -23,6 +23,26 @@ DEBUG = os.environ.get("DEBUG", "False") == "True"
 _allowed = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1")
 ALLOWED_HOSTS = [h.strip() for h in _allowed.split(",") if h.strip()]
 
+# If running on Render, it may expose the external hostname in env vars.
+# Accept common Render env vars and add them to ALLOWED_HOSTS automatically.
+_render_host = os.environ.get("RENDER_EXTERNAL_HOSTNAME") or os.environ.get("RENDER_EXTERNAL_URL")
+if _render_host:
+    try:
+        # if a full URL was provided, extract the host portion
+        from urllib.parse import urlparse
+
+        parsed = urlparse(_render_host)
+        host = parsed.netloc or parsed.path
+    except Exception:
+        host = _render_host
+
+    host = host.strip()
+    if host and host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(host)
+
+# Print ALLOWED_HOSTS at startup to help debug deploy issues
+print("ALLOWED_HOSTS=", ALLOWED_HOSTS)
+
 # Application definition
 INSTALLED_APPS = [
     # Django defaults
