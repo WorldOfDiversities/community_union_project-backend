@@ -16,9 +16,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 APPS_DIR = BASE_DIR / "apps"
 
 # Core Settings
-SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-dev-key-change-in-production")
+# Support both `SECRET_KEY` and `DJANGO_SECRET_KEY` environment variable names
+SECRET_KEY = os.environ.get("SECRET_KEY") or os.environ.get("DJANGO_SECRET_KEY") or "django-insecure-dev-key-change-in-production"
 DEBUG = os.environ.get("DEBUG", "False") == "True"
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+# Normalize ALLOWED_HOSTS from comma-separated env var; allow blank -> []
+_allowed = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1")
+ALLOWED_HOSTS = [h.strip() for h in _allowed.split(",") if h.strip()]
 
 # Application definition
 INSTALLED_APPS = [
