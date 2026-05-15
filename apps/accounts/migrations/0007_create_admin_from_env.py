@@ -13,8 +13,15 @@ def create_admin(apps, schema_editor):
     full_name = os.environ.get('ADMIN_FULL_NAME', 'Super Admin')
     role = os.environ.get('ADMIN_ROLE', 'super_admin')
 
+    # Split full_name into first_name and last_name
+    name_parts = full_name.split(' ', 1)
+    first_name = name_parts[0]
+    last_name = name_parts[1] if len(name_parts) > 1 else ''
+
     user, created = User.objects.get_or_create(email=email, defaults={
-        'full_name': full_name,
+        'username': email,
+        'first_name': first_name,
+        'last_name': last_name,
         'role': role,
         'is_staff': True,
         'is_superuser': True,
@@ -22,7 +29,8 @@ def create_admin(apps, schema_editor):
     })
 
     if not created:
-        user.full_name = full_name
+        user.first_name = first_name
+        user.last_name = last_name
         user.role = role
         user.is_staff = True
         user.is_superuser = True
