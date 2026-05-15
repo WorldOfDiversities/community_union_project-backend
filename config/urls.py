@@ -32,7 +32,9 @@ urlpatterns = [
     path("api/v1/", include("api.v1.urls")),
 ]
 
-# Serve media files in development
+# Serve media files for local development and Render deployments.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Static files remain available in development.
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
