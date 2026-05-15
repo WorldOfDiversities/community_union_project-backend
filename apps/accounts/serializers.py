@@ -107,6 +107,10 @@ class LoginSerializer(serializers.Serializer):
         if not user.is_active:
             raise serializers.ValidationError('User account is inactive.')
         
+        # Check if user is approved (super_admin role bypasses approval requirement)
+        if user.role != 'super_admin' and not user.is_approved:
+            raise serializers.ValidationError('Your account is pending approval. Please contact an administrator.')
+        
         # Validate role if provided
         if provided_role:
             if user.role != provided_role:
