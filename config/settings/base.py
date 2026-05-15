@@ -8,6 +8,8 @@ import os
 from pathlib import Path
 from datetime import timedelta
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Optional helper to parse DATABASE_URL
 import dj_database_url
 
@@ -103,23 +105,13 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # Database
-# Prefer a single `DATABASE_URL` (e.g. from Supabase). Fall back to explicit
-# DB_* env vars for local/dev setups.
-if os.environ.get("DATABASE_URL"):
-    DATABASES = {
-        "default": dj_database_url.parse(os.environ.get("DATABASE_URL"), conn_max_age=600, ssl_require=True)
-    }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ.get("DB_NAME", "cums_db"),
-            "USER": os.environ.get("DB_USER", "postgres"),
-            "PASSWORD": os.environ.get("DB_PASSWORD", "postgres"),
-            "HOST": os.environ.get("DB_HOST", "localhost"),
-            "PORT": os.environ.get("DB_PORT", "5432"),
-        }
-    }
+database_url = os.environ.get("DATABASE_URL")
+if not database_url:
+    raise ImproperlyConfigured("DATABASE_URL is required and must point to Supabase.")
+
+DATABASES = {
+    "default": dj_database_url.parse(database_url, conn_max_age=600, ssl_require=True)
+}
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -195,7 +187,7 @@ SIMPLE_JWT = {
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = os.environ.get(
     "CORS_ALLOWED_ORIGINS",
-    "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3002,http://127.0.0.1:3002"
+    "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3002,http://127.0.0.1:3002,https://community-union-project.vercel.app"
 ).split(",")
 
 CORS_ALLOW_CREDENTIALS = True
