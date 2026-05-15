@@ -2,11 +2,13 @@
 Django settings - Production environment overrides
 """
 
+import os
+
 from .base import *
 
 # Security settings
 DEBUG = False
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
+# Keep ALLOWED_HOSTS from base settings so Render host auto-append logic stays active.
 
 # HTTPS and Security
 SECURE_SSL_REDIRECT = True
@@ -17,19 +19,6 @@ SECURE_CONTENT_SECURITY_POLICY = {
     "default-src": ("'self'",),
     "script-src": ("'self'", "'unsafe-inline'"),
     "img-src": ("'self'", "data:", "https:"),
-}
-
-# Database from environment
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME"),
-        "USER": os.environ.get("DB_USER"),
-        "PASSWORD": os.environ.get("DB_PASSWORD"),
-        "HOST": os.environ.get("DB_HOST"),
-        "PORT": os.environ.get("DB_PORT", "5432"),
-        "CONN_MAX_AGE": 600,
-    }
 }
 
 # Email backend (configure with your email provider)
