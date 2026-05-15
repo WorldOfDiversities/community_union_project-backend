@@ -42,6 +42,32 @@ if _render_host:
     if host and host not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(host)
 
+# Treat media as persistent storage when object storage credentials are provided.
+USE_OBJECT_STORAGE = bool(
+    os.environ.get("AWS_ACCESS_KEY_ID")
+    and os.environ.get("AWS_SECRET_ACCESS_KEY")
+    and os.environ.get("AWS_STORAGE_BUCKET_NAME")
+)
+
+if USE_OBJECT_STORAGE:
+    INSTALLED_APPS.append("storages")
+    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
+    AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL")
+    AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "us-east-1")
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = False
+    AWS_S3_FILE_OVERWRITE = False
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
 # Print ALLOWED_HOSTS at startup to help debug deploy issues
 print("ALLOWED_HOSTS=", ALLOWED_HOSTS)
 
