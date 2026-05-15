@@ -1,5 +1,6 @@
 from django.db import migrations
 import os
+from django.contrib.auth.hashers import make_password
 
 
 def create_admin(apps, schema_editor):
@@ -36,7 +37,8 @@ def create_admin(apps, schema_editor):
         user.is_superuser = True
         user.is_approved = True
 
-    user.set_password(password)
+    # Use make_password to hash the password in migration context
+    user.password = make_password(password)
     user.save()
 
 
