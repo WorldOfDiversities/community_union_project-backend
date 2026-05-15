@@ -12,7 +12,7 @@ cryptography==41.0.7
 # Database (PostgreSQL for production, SQLite for dev)
 # Use psycopg (psycopg3) binary wheel which is more compatible on modern Python
 # environments (avoids building from source / libpq compile issues).
-psycopg[binary]==3.2.2; platform_system != "Windows"
+psycopg[binary]==3.2.13; platform_system != "Windows"
 
 # Image handling
 Pillow>=11.0.0
