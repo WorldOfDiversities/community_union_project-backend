@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import GalleryMedia
+from django.conf import settings
+from urllib.parse import urlparse
 
 
 class GalleryMediaSerializer(serializers.ModelSerializer):
@@ -25,9 +27,37 @@ class GalleryMediaSerializer(serializers.ModelSerializer):
     def get_media_url(self, obj):
         """Build absolute URL for media file."""
         request = self.context.get('request')
-        if obj.media_file and request:
-            return request.build_absolute_uri(obj.media_file.url)
-        return obj.media_file.url if obj.media_file else None
+        # Prefer the storage-provided URL when available
+        if obj.media_file:
+            try:
+                file_url = obj.media_file.url
+            except Exception:
+                file_url = None
+
+            # If storage returned an absolute URL, use it (optionally absolutize via request)
+            if file_url and (file_url.startswith('http://') or file_url.startswith('https://')):
+                return request.build_absolute_uri(file_url) if request else file_url
+
+            # If we have a Supabase/S3 endpoint configured, construct the public object URL
+            endpoint = getattr(settings, 'AWS_S3_ENDPOINT_URL', None)
+            bucket = getattr(settings, 'AWS_STORAGE_BUCKET_NAME', None)
+            name = getattr(obj.media_file, 'name', None)
+            if endpoint and bucket and name:
+                try:
+                    parsed = urlparse(endpoint)
+                    host = parsed.netloc
+                    # Convert storage host ("<ref>.storage.supabase.co") to public host ("<ref>.supabase.co")
+                    project_host = host.replace('.storage.supabase.co', '.supabase.co')
+                    public_url = f"https://{project_host}/storage/v1/object/public/{bucket}/{name}"
+                    return public_url
+                except Exception:
+                    pass
+
+            # Fallback to building an absolute URL to the backend media path
+            if file_url and request:
+                return request.build_absolute_uri(file_url)
+            return file_url or name or None
+        return None
     
     def get_uploader(self, obj):
         """Return uploader info."""

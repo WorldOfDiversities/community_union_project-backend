@@ -217,10 +217,25 @@ SIMPLE_JWT = {
 }
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS = os.environ.get(
+def _csv_env(name, default=""):
+    return [v.strip() for v in os.environ.get(name, default).split(",") if v.strip()]
+
+
+CORS_ALLOWED_ORIGINS = _csv_env(
     "CORS_ALLOWED_ORIGINS",
-    "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3002,http://127.0.0.1:3002,https://community-union-project.vercel.app"
-).split(",")
+    "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3002,http://127.0.0.1:3002,https://community-union-project.vercel.app",
+)
+
+# Allow preview deployments such as https://<branch>-<project>.vercel.app
+CORS_ALLOWED_ORIGIN_REGEXES = _csv_env(
+    "CORS_ALLOWED_ORIGIN_REGEXES",
+    r"^https://.*\.vercel\.app$",
+)
+
+CSRF_TRUSTED_ORIGINS = _csv_env(
+    "CSRF_TRUSTED_ORIGINS",
+    "https://community-union-project.vercel.app,https://*.vercel.app,http://localhost:3000,http://127.0.0.1:3000",
+)
 
 CORS_ALLOW_CREDENTIALS = True
 
