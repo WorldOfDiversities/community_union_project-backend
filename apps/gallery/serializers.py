@@ -36,6 +36,23 @@ class GalleryMediaSerializer(serializers.ModelSerializer):
 
             # If storage returned an absolute URL, use it (optionally absolutize via request)
             if file_url and (file_url.startswith('http://') or file_url.startswith('https://')):
+                # Supabase S3 URLs are often private (403). Convert to the public object URL shape.
+                if '.storage.supabase.co' in file_url and '/storage/v1/s3/' in file_url:
+                    try:
+                        parsed = urlparse(file_url)
+                        project_host = parsed.netloc.replace('.storage.supabase.co', '.supabase.co')
+                        # Keep the object key after /storage/v1/s3/<bucket>/
+                        path = parsed.path
+                        marker = '/storage/v1/s3/'
+                        idx = path.find(marker)
+                        if idx >= 0:
+                            remainder = path[idx + len(marker):].lstrip('/')
+                            parts = remainder.split('/', 1)
+                            if len(parts) == 2:
+                                bucket_from_url, object_key = parts
+                                return f"https://{project_host}/storage/v1/object/public/{bucket_from_url}/{object_key}"
+                    except Exception:
+                        pass
                 return request.build_absolute_uri(file_url) if request else file_url
 
             # If we have a Supabase/S3 endpoint configured, construct the public object URL
