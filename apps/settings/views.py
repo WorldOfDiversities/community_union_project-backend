@@ -61,8 +61,15 @@ class OrganizationSettingsViewSet(viewsets.ViewSet):
             )
         
         settings, _ = OrganizationSettings.objects.get_or_create(id=1)
+        previous_logo = getattr(settings, 'logo', None)
         settings.logo = logo_file
         settings.save()
+
+        try:
+            if previous_logo and getattr(previous_logo, 'name', None) and previous_logo.name != settings.logo.name:
+                previous_logo.storage.delete(previous_logo.name)
+        except Exception:
+            pass
         
         serializer = OrganizationSettingsSerializer(settings, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)

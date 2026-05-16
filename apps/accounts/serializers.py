@@ -4,11 +4,13 @@ from django.core.files.storage import default_storage
 from django.conf import settings
 import os
 import urllib.parse
+from apps.media_utils import resolve_media_url
 
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model - excludes sensitive fields"""
     full_name = serializers.SerializerMethodField()
+    avatar_url = serializers.SerializerMethodField()
     
     class Meta:
         model = User
@@ -18,6 +20,15 @@ class UserSerializer(serializers.ModelSerializer):
     def get_full_name(self, obj):
         """Get full name from first_name and last_name"""
         return obj.get_full_name() or obj.email
+
+    def get_avatar_url(self, obj):
+        request = self.context.get('request')
+        return resolve_media_url(
+            raw_url=getattr(obj, 'avatar_url', None),
+            endpoint_url=getattr(settings, 'AWS_S3_ENDPOINT_URL', None),
+            bucket_name=getattr(settings, 'AWS_STORAGE_BUCKET_NAME', None),
+            request=request,
+        )
 
 
 class RegisterSerializer(serializers.ModelSerializer):

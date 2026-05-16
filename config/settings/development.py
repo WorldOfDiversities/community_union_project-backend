@@ -2,19 +2,15 @@
 Django settings - Development environment overrides
 """
 
+import os
+
 from .base import *
 
 # Override for development
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
-# SQLite for local development (or PostgreSQL if preferred)
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
+# Development uses the same PostgreSQL DATABASE_URL path as production.
 
 # Disable CORS restrictions in development
 CORS_ALLOW_ALL_ORIGINS = True

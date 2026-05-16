@@ -1,17 +1,29 @@
 from rest_framework import serializers
 from .models import OrganizationSettings
+from apps.media_utils import resolve_media_url
 
 
 class OrganizationSettingsSerializer(serializers.ModelSerializer):
     logo_url = serializers.SerializerMethodField()
     
     def get_logo_url(self, obj):
-        if obj.logo:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.logo.url)
-            return obj.logo.url
-        return None
+        if not obj.logo:
+            return None
+
+        request = self.context.get('request')
+        try:
+            logo_url = obj.logo.url
+        except Exception:
+            logo_url = None
+
+        return resolve_media_url(
+            raw_url=logo_url,
+            storage_name=getattr(obj.logo, 'name', None),
+            endpoint_url=None,
+            bucket_name=None,
+            storage=getattr(obj.logo, 'storage', None),
+            request=request,
+        )
     
     class Meta:
         model = OrganizationSettings

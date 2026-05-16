@@ -59,8 +59,8 @@ Django REST API for the Community Union Management System.
 
 ## Database
 
-**Development:** SQLite (db.sqlite3)
-**Production:** PostgreSQL 16+
+**Development:** Supabase PostgreSQL via `DATABASE_URL`
+**Production:** Supabase PostgreSQL via `DATABASE_URL`
 
 ## Environment Variables
 
@@ -71,7 +71,7 @@ Key variables:
 - `DEBUG` - Enable debug mode (False in production)
 - `SECRET_KEY` - Django secret (min 50 chars)
 - `ALLOWED_HOSTS` - Comma-separated allowed hosts
-- `DB_*` - Database configuration
+- `DATABASE_URL` - Supabase PostgreSQL connection string
 - `CORS_ALLOWED_ORIGINS` - Frontend origins
 
 ## Tech Stack
@@ -79,7 +79,7 @@ Key variables:
 - **Framework:** Django 5.0
 - **API:** Django REST Framework 3.15+
 - **Auth:** SimpleJWT 5.3.2
-- **Database:** PostgreSQL 16+ (production), SQLite (development)
+- **Database:** Supabase PostgreSQL
 - **Cache & Queue:** Redis + Celery
 - **File Storage:** AWS S3 / Cloudinary (production)
 

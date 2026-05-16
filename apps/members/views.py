@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from apps.accounts.models import User
+from apps.media_utils import resolve_media_url, storage_object_name_from_url
 
 from .serializers import MemberDetailSerializer, MemberSerializer
 
@@ -80,6 +81,7 @@ class MemberListView(generics.ListCreateAPIView):
 				import urllib.parse
 
 				filename = f"avatars/{email}-{avatar_file.name}"
+				previous_avatar = getattr(user, 'avatar_url', None)
 				saved_path = default_storage.save(filename, avatar_file)
 				try:
 					avatar_url = default_storage.url(saved_path)
@@ -90,7 +92,21 @@ class MemberListView(generics.ListCreateAPIView):
 					avatar_url = urllib.parse.unquote(avatar_url)
 				except Exception:
 					pass
-				user.avatar_url = avatar_url
+				resolved_avatar_url = resolve_media_url(
+					raw_url=avatar_url,
+					storage_name=saved_path,
+					endpoint_url=getattr(settings, 'AWS_S3_ENDPOINT_URL', None),
+					bucket_name=getattr(settings, 'AWS_STORAGE_BUCKET_NAME', None),
+					storage=default_storage,
+				)
+				if resolved_avatar_url:
+					user.avatar_url = resolved_avatar_url
+					old_name = storage_object_name_from_url(previous_avatar)
+					if old_name and old_name != saved_path:
+						try:
+							default_storage.delete(old_name)
+						except Exception:
+							pass
 			except Exception:
 				# ignore storage errors; save without avatar
 				pass
