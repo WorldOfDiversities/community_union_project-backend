@@ -72,6 +72,13 @@ class GalleryMediaSerializer(serializers.ModelSerializer):
                             if len(parts) == 2:
                                 bucket_from_url, object_key = parts
                                 public = f"https://{project_host}/storage/v1/object/public/{bucket_from_url}/{object_key}"
+                                # Prefer storage backend existence check when available
+                                try:
+                                    storage = getattr(obj.media_file, 'storage', None)
+                                    if storage and storage.exists(object_key):
+                                        return public
+                                except Exception:
+                                    pass
                                 if _url_exists(public):
                                     return public
                     except Exception:
@@ -93,6 +100,13 @@ class GalleryMediaSerializer(serializers.ModelSerializer):
                     # Convert storage host ("<ref>.storage.supabase.co") to public host ("<ref>.supabase.co")
                     project_host = host.replace('.storage.supabase.co', '.supabase.co')
                     public_url = f"https://{project_host}/storage/v1/object/public/{bucket}/{name}"
+                    # Use storage backend exists() when possible (more reliable than HTTP HEAD)
+                    try:
+                        storage = getattr(obj.media_file, 'storage', None)
+                        if storage and storage.exists(name):
+                            return public_url
+                    except Exception:
+                        pass
                     if _url_exists(public_url):
                         return public_url
                 except Exception:
