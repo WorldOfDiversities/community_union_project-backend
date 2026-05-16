@@ -50,7 +50,6 @@ USE_OBJECT_STORAGE = bool(
 )
 
 if USE_OBJECT_STORAGE:
-    INSTALLED_APPS.append("storages")
     AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
     AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
@@ -98,6 +97,13 @@ INSTALLED_APPS = [
     "apps.settings",
     "apps.gallery",
 ]
+
+if USE_OBJECT_STORAGE:
+    # Guard appending to INSTALLED_APPS in case settings are being
+    # imported in an unexpected order (some deploy environments may
+    # load partial modules). This avoids raising NameError during import.
+    if "INSTALLED_APPS" in globals():
+        INSTALLED_APPS.append("storages")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
