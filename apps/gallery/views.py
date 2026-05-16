@@ -23,7 +23,9 @@ class GalleryListCreateView(generics.ListCreateAPIView):
         """Get paginated list of gallery media."""
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        # Only return items that have a reachable media URL (avoid showing DB rows with missing storage objects)
+        filtered = [item for item in serializer.data if item.get('media_url')]
+        return Response(filtered)
     
     def create(self, request, *args, **kwargs):
         """Upload new media to gallery."""
