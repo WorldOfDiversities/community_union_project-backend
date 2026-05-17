@@ -27,25 +27,25 @@ class GalleryMediaSerializer(serializers.ModelSerializer):
     def get_media_url(self, obj):
         """Build absolute URL for media file."""
         request = self.context.get('request')
-            endpoint = getattr(settings, 'AWS_S3_ENDPOINT_URL', None)
-            bucket = getattr(settings, 'AWS_STORAGE_BUCKET_NAME', None)
+        endpoint = getattr(settings, 'AWS_S3_ENDPOINT_URL', None)
+        bucket = getattr(settings, 'AWS_STORAGE_BUCKET_NAME', None)
 
-            if not obj.media_file:
-                return None
+        if not obj.media_file:
+            return None
 
-            try:
-                file_url = obj.media_file.url
-            except Exception:
-                file_url = None
+        try:
+            file_url = obj.media_file.url
+        except Exception:
+            file_url = None
 
-            return resolve_media_url(
-                raw_url=file_url,
-                storage_name=getattr(obj.media_file, 'name', None),
-                endpoint_url=endpoint,
-                bucket_name=bucket,
-                storage=getattr(obj.media_file, 'storage', None),
-                request=request,
-            )
+        return resolve_media_url(
+            raw_url=file_url,
+            storage_name=getattr(obj.media_file, 'name', None),
+            endpoint_url=endpoint,
+            bucket_name=bucket,
+            storage=getattr(obj.media_file, 'storage', None),
+            request=request,
+        )
     
     def get_uploader(self, obj):
         """Return uploader info."""
