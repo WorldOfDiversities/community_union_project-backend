@@ -7,6 +7,11 @@ from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.core.files.storage import default_storage
+from django.conf import settings
+import os
+import urllib.parse
+from apps.media_utils import resolve_media_url, storage_object_name_from_url
 
 
 class DashboardSummaryView(APIView):
@@ -138,4 +143,77 @@ class RejectUserView(APIView):
         """Reject/deactivate a specific pending user"""
         # Approvals are disabled; return success but do not change state
         return Response({'message': 'Approvals are temporarily disabled.'}, status=status.HTTP_200_OK)
+
+
+class ProfileView(APIView):
+    """Get or update current user profile"""
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request):
+        """Get current user profile"""
+        user = request.user
+        return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        """Update current user profile"""
+        user = request.user
+        
+        # Update user fields
+        if 'first_name' in request.data:
+            user.first_name = request.data['first_name']
+        if 'last_name' in request.data:
+            user.last_name = request.data['last_name']
+        if 'email' in request.data:
+            user.email = request.data['email']
+        
+        # Update profile fields if they exist on the User model
+        if 'date_of_birth' in request.data and hasattr(user, 'date_of_birth'):
+            user.date_of_birth = request.data['date_of_birth']
+        if 'occupation' in request.data and hasattr(user, 'occupation'):
+            user.occupation = request.data['occupation']
+        if 'gender' in request.data and hasattr(user, 'gender'):
+            user.gender = request.data['gender']
+        if 'phone' in request.data:
+            user.phone = request.data['phone']
+        if 'address' in request.data and hasattr(user, 'address'):
+            user.address = request.data['address']
+        
+        # Handle avatar upload
+        if 'avatar' in request.FILES:
+            avatar_file = request.FILES['avatar']
+            try:
+                filename = f"avatars/{user.email}-{avatar_file.name}"
+                previous_avatar = getattr(user, 'avatar_url', None)
+                saved_path = default_storage.save(filename, avatar_file)
+                try:
+                    avatar_url = default_storage.url(saved_path)
+                except Exception:
+                    avatar_url = os.path.join(getattr(settings, 'MEDIA_URL', '/media/'), saved_path)
+                # Some storage backends may return URL-encoded paths; store a decoded URL
+                try:
+                    avatar_url = urllib.parse.unquote(avatar_url)
+                except Exception:
+                    pass
+                resolved_avatar_url = resolve_media_url(
+                    raw_url=avatar_url,
+                    storage_name=saved_path,
+                    endpoint_url=getattr(settings, 'AWS_S3_ENDPOINT_URL', None),
+                    bucket_name=getattr(settings, 'AWS_STORAGE_BUCKET_NAME', None),
+                    storage=default_storage,
+                )
+                if resolved_avatar_url:
+                    user.avatar_url = resolved_avatar_url
+                    old_name = storage_object_name_from_url(previous_avatar)
+                    if old_name and old_name != saved_path:
+                        try:
+                            default_storage.delete(old_name)
+                        except Exception:
+                            pass
+            except Exception:
+                # ignore storage errors; save without avatar
+                pass
+        
+        user.save()
+        return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
 
