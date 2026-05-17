@@ -45,9 +45,8 @@ class MemberListView(generics.ListCreateAPIView):
 			user.first_name = first_name or user.first_name
 			user.last_name = last_name or user.last_name
 			user.phone = phone or user.phone
-			# Approval workflow disabled: keep users approved after onboarding updates.
-			user.onboarding_submitted = False
-			user.is_approved = True
+			# Mark that user has submitted onboarding; they remain unapproved until admin approves
+			user.onboarding_submitted = True
 			# preserve role unless explicitly set by an admin
 			if request.user.role in ['super_admin', 'executive', 'secretary'] and role:
 				user.role = role
