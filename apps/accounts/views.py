@@ -107,25 +107,8 @@ class PendingApprovalsView(APIView):
 
     def get(self, request):
         """Get all pending approval users"""
-        # Only allow admin roles to view pending approvals
-        if request.user.role not in ['super_admin', 'executive', 'secretary']:
-            return Response(
-                {'detail': 'You do not have permission to view pending approvals.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        User = get_user_model()
-        # Get users who submitted onboarding but are not yet approved
-        pending = User.objects.filter(
-            onboarding_submitted=True,
-            is_approved=False
-        ).order_by('-updated_at')
-
-        serializer = UserSerializer(pending, many=True)
-        return Response({
-            'count': pending.count(),
-            'pending_approvals': serializer.data,
-        })
+        # Approvals are temporarily disabled; return empty results
+        return Response({'count': 0, 'pending_approvals': []})
 
 
 class PendingApprovalsSummaryView(APIView):
@@ -133,22 +116,8 @@ class PendingApprovalsSummaryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        User = get_user_model()
-        pending_qs = User.objects.filter(onboarding_submitted=True, is_approved=False).order_by('-updated_at')
-        count = pending_qs.count()
-        sample = pending_qs[:3]
-        # Return minimal data for widget consumption
-        data = [
-            {
-                'id': u.id,
-                'full_name': u.get_full_name() or u.email,
-                'email': u.email,
-                'avatar_url': getattr(u, 'avatar_url', None),
-                'updated_at': u.updated_at,
-            }
-            for u in sample
-        ]
-        return Response({'count': count, 'sample': data})
+        # Approvals disabled: return empty summary
+        return Response({'count': 0, 'sample': []})
 
 
 class ApproveUserView(APIView):
@@ -157,30 +126,8 @@ class ApproveUserView(APIView):
 
     def post(self, request, user_id):
         """Approve a specific user"""
-        # Only allow admin roles
-        if request.user.role not in ['super_admin', 'executive', 'secretary']:
-            return Response(
-                {'detail': 'You do not have permission to approve users.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        User = get_user_model()
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return Response(
-                {'detail': 'User not found.'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        # Approve the user
-        user.is_approved = True
-        user.save()
-
-        return Response({
-            'message': f'User {user.email} has been approved.',
-            'user': UserSerializer(user).data,
-        }, status=status.HTTP_200_OK)
+        # Approvals are disabled; return success but do not change state
+        return Response({'message': 'Approvals are temporarily disabled.'}, status=status.HTTP_200_OK)
 
 
 class RejectUserView(APIView):
@@ -189,30 +136,6 @@ class RejectUserView(APIView):
 
     def post(self, request, user_id):
         """Reject/deactivate a specific pending user"""
-        # Only allow admin roles
-        if request.user.role not in ['super_admin', 'executive', 'secretary']:
-            return Response(
-                {'detail': 'You do not have permission to reject users.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        User = get_user_model()
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return Response(
-                {'detail': 'User not found.'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        # Reject by deactivating and resetting onboarding flag
-        user.is_active = False
-        user.onboarding_submitted = False
-        user.is_approved = False
-        user.save()
-
-        return Response({
-            'message': f'User {user.email} has been rejected.',
-            'user': UserSerializer(user).data,
-        }, status=status.HTTP_200_OK)
+        # Approvals are disabled; return success but do not change state
+        return Response({'message': 'Approvals are temporarily disabled.'}, status=status.HTTP_200_OK)
 
