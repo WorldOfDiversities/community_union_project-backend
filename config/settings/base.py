@@ -9,6 +9,11 @@ from pathlib import Path
 from datetime import timedelta
 
 from django.core.exceptions import ImproperlyConfigured
+# Import corsheaders defaults to extend allowed CORS headers
+try:
+    from corsheaders.defaults import default_headers as CORS_DEFAULT_HEADERS
+except Exception:
+    CORS_DEFAULT_HEADERS = []
 
 # Optional helper to parse DATABASE_URL
 import dj_database_url
@@ -238,6 +243,13 @@ CSRF_TRUSTED_ORIGINS = _csv_env(
 )
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Extend allowed CORS headers to include cache-control and pragma which
+# some frontend requests may send (and which trigger preflight otherwise).
+CORS_ALLOW_HEADERS = list(CORS_DEFAULT_HEADERS) + [
+    'cache-control',
+    'pragma',
+]
 
 # Logging
 LOGGING = {
