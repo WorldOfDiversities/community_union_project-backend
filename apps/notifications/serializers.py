@@ -7,7 +7,7 @@ class AnnouncementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Announcement
-        fields = ['id', 'subject', 'body', 'sender', 'created_at']
+        fields = ['id', 'subject', 'body', 'sender', 'created_at', 'expires_at']
 
     def get_sender(self, obj):
         if obj.sender:

@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.utils import timezone
 from .models import Announcement
 from .serializers import AnnouncementSerializer
 
@@ -11,6 +12,7 @@ class BroadcastView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        Announcement.objects.filter(expires_at__lte=timezone.now()).delete()
         serializer = AnnouncementSerializer(data=request.data)
         if serializer.is_valid():
             announcement = Announcement.objects.create(
@@ -28,7 +30,8 @@ class BroadcastListView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        qs = Announcement.objects.all()
+        Announcement.objects.filter(expires_at__lte=timezone.now()).delete()
+        qs = Announcement.objects.filter(expires_at__gt=timezone.now())
         serializer = AnnouncementSerializer(qs, many=True)
         return Response(serializer.data)
 from rest_framework import viewsets
